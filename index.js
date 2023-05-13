@@ -3,18 +3,64 @@ let currentPage = 1;
 let pokemons = []
 
 
-const updatePaginationDiv = (currentPage, numPages) => {
-  $('#pagination').empty()
 
-  const startPage = 1;
-  const endPage = numPages;
+
+
+const updatePaginationDiv = (currentPage, numPages) => {
+
+  $('#pagination').empty();
+
+  const startPage = Math.max(currentPage - 2, 1);
+  const endPage = Math.min(startPage + 4, numPages);
+
+  // Create previous button
+  const previousButton = $(`
+    <button class="btn btn-primary page ml-1 numberedButtons" value="previous" style="margin: 1%;">Previous</button>
+  `);
+  if (currentPage === 1) {
+    previousButton.hide();
+  }
+  previousButton.on('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      updatePaginationDiv(currentPage, numPages);
+      paginate(currentPage, PAGE_SIZE, pokemons)
+    }
+  });
+  $('#pagination').append(previousButton);
+
+  // Create page buttons
   for (let i = startPage; i <= endPage; i++) {
-    $('#pagination').append(`
-    <button class="btn btn-primary page ml-1 numberedButtons" value="${i}">${i}</button>
-    `)
+    const buttonClass = i === currentPage ? 'btn btn-warning page ml-1 numberedButtons' : 'btn btn-primary page ml-1 numberedButtons';
+    const button = $(`
+      <button class="${buttonClass}" value="${i}" style="margin: 1%;">${i}</button>
+    `);
+    $('#pagination').append(button);
   }
 
-}
+  // Create next button
+  const nextButton = $(`
+    <button class="btn btn-primary page ml-1 numberedButtons" value="next" style="margin: 1%;">Next</button>
+  `);
+
+  if (currentPage === numPages) {
+    currentPage.hide();
+  }
+  nextButton.on('click', () => {
+    if (currentPage < numPages) {
+      currentPage++;
+      console.log(currentPage);
+      updatePaginationDiv(currentPage, numPages);
+      paginate(currentPage, PAGE_SIZE, pokemons)
+    }
+  });
+  $('#pagination').append(nextButton);
+};
+
+
+
+console.log(currentPage);
+
 
 const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
   selected_pokemons = pokemons.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -44,8 +90,15 @@ const setup = async () => {
 
 
   paginate(currentPage, PAGE_SIZE, pokemons)
+
+  $(document).ready(function() {
+    const pageSizeElement = $("#total-pokemon");
+    pageSizeElement.text(`Showing ${PAGE_SIZE} of ${pokemons.length} Pokemons`);
+  });
+  
   const numPages = Math.ceil(pokemons.length / PAGE_SIZE)
   updatePaginationDiv(currentPage, numPages)
+
 
 
 
@@ -96,7 +149,11 @@ const setup = async () => {
 
     //update pagination buttons
     updatePaginationDiv(currentPage, numPages)
+    console.log(e.target);
+
   })
+
+  updatePaginationDiv(currentPage, numPages);
 
 }
 
