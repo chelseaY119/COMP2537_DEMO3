@@ -10,18 +10,24 @@ let numPages = 0;
 $(document).ready(function () {
   $('input[name="type-filter"]').on('change', function () {
     // Get the selected filter types
-    filterType = $('input[name="type-filter"]:checked').map(function () {
+    filterTypes = $('input[name="type-filter"]:checked').map(function () {
       return $(this).val();
     }).get();
 
-    console.log(filterType);
-    paginate(currentPage, PAGE_SIZE, pokemons, filterType);
+    // Update the checked status of checkboxes
+    $('input[name="type-filter"]').each(function () {
+      const checkboxValue = $(this).val();
+      $(this).prop('checked', filterTypes.includes(checkboxValue));
+    });
+
+    console.log(currentPage);
+    paginate(currentPage, PAGE_SIZE, pokemons, filterTypes);
   });
 });
 
 //update the page based on selection
 const updatePaginationDiv = (currentPage, numPages, filterType) => {
-  const startPage = Math.max(currentPage - 2, 1);
+ const startPage = Math.max(currentPage - 2, 1);
   const endPage = Math.min(startPage + 4, numPages);
   $('#pagination').empty();
 
@@ -75,8 +81,8 @@ const updatePaginationDiv = (currentPage, numPages, filterType) => {
 
 const paginate = async (currentPage, PAGE_SIZE, pokemons, filterType) => {
 
-  console.log("filtertype", filterType)
-  // $('input[name="type-filter"]').prop('checked', true);
+  console.log(filterType)
+  $('input[name="type-filter"]').prop('checked', false);
 
   if (filterType.length !== 0) {
 
@@ -84,12 +90,12 @@ const paginate = async (currentPage, PAGE_SIZE, pokemons, filterType) => {
     filteredPokemons = await Promise.all(pokemons.map(async (pokemon) => {
       const res = await axios.get(pokemon.url);
       const types = res.data.types.map(type => type.type.name);
-      if (filterType.every((filterType) => types.includes(filterType))) {
+      if (filterTypes.every((filterType) => types.includes(filterType))) {
         return pokemon;
       }
     }));
     selected_pokemons = filteredPokemons.filter(pokemon => pokemon !== undefined);
-    // console.log(selected_pokemons);
+    console.log(selected_pokemons);
   } else {
     selected_pokemons = pokemons;
   }
@@ -103,13 +109,13 @@ const paginate = async (currentPage, PAGE_SIZE, pokemons, filterType) => {
     const pageSizeElement = $("#total-pokemon");
 
     if (last_page_size !== 10 && numPages === currentPage) {
-      pageSizeElement.text(`Showing ${last_page_size} of ${selected_number} ${filterType} Pokemons`);
-    } else if(filterType.length == 0){
-      console.log("ok")
-      pageSizeElement.text(`Showing ${PAGE_SIZE} of ${selected_number} Pokemons`);
-    } else {
-      pageSizeElement.text(`Showing ${PAGE_SIZE} of ${selected_number} ${filterType} Pokemons`);
-    }
+        pageSizeElement.text(`Showing ${last_page_size} of ${selected_number} ${filterType} Pokemons`);
+      } else if(filterType.length == 0){
+        console.log("ok")
+        pageSizeElement.text(`Showing ${PAGE_SIZE} of ${selected_number} Pokemons`);
+      } else {
+        pageSizeElement.text(`Showing ${PAGE_SIZE} of ${selected_number} ${filterType} Pokemons`);
+      }
   });
 
   // Calculate the start and end indices for the current page
@@ -124,7 +130,7 @@ const paginate = async (currentPage, PAGE_SIZE, pokemons, filterType) => {
   for (const pokemon of pokemonsForPage) {
     const res = await axios.get(pokemon.url);
     const types = res.data.types.map(type => type.type.name);
-
+   
     $('#pokeCards').append(`
       <div class="pokeCard card" pokeName=${res.data.name}>
         <h3>${res.data.name.toUpperCase()}</h3> 
@@ -149,10 +155,15 @@ const setup = async () => {
 
   $('input[name="type-filter"]').on('change', function () {
     filterType = $(this).val();
+    // filterType.forEach(type => {
+    //   // console.log(type)
+    //   $(`input[name="type-filter"][value="${type}"]`).prop('checked', true);
+    // });
     console.log(filterType)
     currentPage = 1; // Reset to the first page when applying a new filter
+    // paginate(currentPage, PAGE_SIZE, pokemons, filterType);
     updatePaginationDiv(currentPage, numPages, filterType)
-
+  
   });
 
   paginate(currentPage, PAGE_SIZE, pokemons, filterType)
@@ -205,14 +216,14 @@ const setup = async () => {
     filterTypes = $('input[name="type-filter"]:checked').map(function () {
       return $(this).val();
     }).get();
-
+    
     updatePaginationDiv(currentPage, numPages, filterType);
+    
+      paginate(currentPage, PAGE_SIZE, pokemons, filterType);
+  
+  updatePaginationDiv(currentPage, numPages, filterType);
 
-    paginate(currentPage, PAGE_SIZE, pokemons, filterType);
-
-    updatePaginationDiv(currentPage, numPages, filterType);
-
-  })
+})
 }
 
 $(document).ready(setup);
